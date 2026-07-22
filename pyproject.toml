@@ -1,0 +1,16 @@
+[project]
+name = "diffusion-models-from-scratch"
+version = "0.1.0"
+description = "Diffusion models implemented from scratch"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "torch",
+    "torchvision",
+    "einops",
+    "scipy",
+    "tqdm",
+]
+
+[tool.uv]
+package = false
