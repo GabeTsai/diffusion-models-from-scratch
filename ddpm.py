@@ -53,7 +53,7 @@ def _(torch):
     T = 1000            # diffusion timesteps
     image_size = 28
     channels = 1
-    batch_size = 256
+    batch_size = 128
     lr = 2e-4
     epochs = 10
     return T, batch_size, channels, device, epochs, image_size, lr
@@ -147,12 +147,12 @@ def _(F, T, device, model, nn, torch):
                 x_{t-1}: (B, C, H, W)
             """
             z = torch.randn_like((x_t))
-            z[t == 1] = 0.0
+            z[t == 0] = 0.0
             eps_theta = self.network(x_t, t)
             alphas_i = self._gather(self.alphas, t, x_t.shape) # (B, 1, 1, 1)
             alpha_bars_i = self._gather(self.alpha_bars, t, x_t.shape) # (B, 1, 1, 1)
             betas_i = self._gather(self.betas, t, x_t.shape) # (B, 1, 1, 1)
-            return 1 / torch.sqrt(alphas_i) * (x_t - (1 - alphas_i) / (1 - alpha_bars_i) * eps_theta) + torch.sqrt(betas_i) * z
+            return 1 / torch.sqrt(alphas_i) * (x_t - (1 - alphas_i) / torch.sqrt(1 - alpha_bars_i) * eps_theta) + torch.sqrt(betas_i) * z
 
         @torch.no_grad()
         def sample(self, n, image_size=28, channels=1):
@@ -164,7 +164,7 @@ def _(F, T, device, model, nn, torch):
             Returns the final x_0 in [-1, 1].
             """
             x_t = torch.randn((n, channels, image_size, image_size), device=self.device)
-            for t in range(T - 1, -1, -1):
+            for t in range(self.T - 1, -1, -1):
                 time_batch = torch.full((n, ), t, device=self.device, dtype=torch.long)
                 x_t = self.p_sample(x_t, time_batch)
             return x_t
@@ -207,7 +207,7 @@ def _(make_grid, to_pil_image):
 
 @app.cell
 def _():
-    TRAIN = False
+    TRAIN = True
     return (TRAIN,)
 
 
@@ -219,9 +219,8 @@ def _(TRAIN, diffusion, epochs, lr, model, train, train_loader):
 
 
 @app.cell
-def _(RUN_SAMPLING, TRAIN, channels, diffusion, image_size, show_samples):
-    if not TRAIN:
-        show_samples(diffusion, n=16, image_size=image_size, channels=channels) if RUN_SAMPLING else None
+def _(TRAIN, channels, diffusion, image_size, show_samples):
+    show_samples(diffusion, n=16, image_size=image_size, channels=channels) if not TRAIN else None
     return
 
 
