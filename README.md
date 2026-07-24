@@ -1,2 +1,2 @@
 # Diffusion-Models-From-Scratch
-From-scratch implementations of seminal diffusion models like DDPMs and Flow Matching models. 
+From-scratch implementations of the core logic behind seminal diffusion models like DDPMs and Flow Matching models. Model architecture isn't the focus of the repo so unless the architecture is particularly noteworthy, they will be copied (with proper crediting) from trustworthy implementations (i.e. LucidRains). 

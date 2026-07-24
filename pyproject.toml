@@ -11,6 +11,7 @@ dependencies = [
     "marimo",
     "scipy",
     "tqdm",
+    "denoising-diffusion-pytorch>=2.2.6",
 ]
 
 [tool.uv]
