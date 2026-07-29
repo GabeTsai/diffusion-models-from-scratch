@@ -433,8 +433,13 @@ def _(
     )
 
     # Show sigma/noise at each step and corresponding denoised estimate 
-    # At each step, fresh noise from langevin churn raises the sample's noise level slightly. The ODE step, driven by the denoiser's clean-image estimate, then carries the noise down to the next scheduled level. The denoiser treats injected noise identically to noise already present. Adding the fresh churn exchanges some structured, off-distribution deviation for exact, on-distribution Gaussian noise (eps in Algorithm 2 line 6), so the trajectory self-corrects toward the true marginals as σ decreases. 
-    # Should see that churned state is a much more noisier version of the input.
+    # At each step, fresh noise from langevin churn raises the sample's noise level slightly. 
+    # The ODE step, driven by the denoiser's clean-image estimate, then carries the noise down 
+    # to the next scheduled level. The denoiser treats injected noise identically to noise already present. 
+    # Adding the fresh churn exchanges some structured, off-distribution deviation for exact, 
+    # on-distribution Gaussian noise (eps in Algorithm 2 line 6), so the trajectory self-corrects 
+    # toward the true marginals as σ decreases. 
+    # Should also see that churned state is a much more noisier version of the input.
 
     mo.vstack([
         mo.md(f"**D_theta estimate** &nbsp; sigma: {' -> '.join(f'{s:.3g}' for s, _, _ in traj)}"),
