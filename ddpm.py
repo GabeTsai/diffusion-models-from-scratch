@@ -32,13 +32,13 @@ def _():
     from torchvision import datasets, transforms
     from torchvision.utils import make_grid
     from torchvision.transforms.functional import to_pil_image
-    from denoising_diffusion_pytorch import Unet
+    from networks import ConditionedUnet
     from tqdm.auto import tqdm
 
     return (
+        ConditionedUnet,
         DataLoader,
         F,
-        Unet,
         datasets,
         make_grid,
         nn,
@@ -75,51 +75,6 @@ def _(DataLoader, batch_size, datasets, transforms):
         train_dataset, batch_size=batch_size, shuffle=True, num_workers=2, drop_last=True
     )
     return (train_loader,)
-
-
-@app.cell
-def _(Unet, nn, torch):
-    class ConditionedUnet(Unet):
-        """
-        Base Unet with learned class embedding added to timestep embedding for classifier-free guidance. 
-        """
-        def __init__(self, num_classes, dim, **kwargs):
-            super().__init__(dim=dim, **kwargs)
-            self.num_classes = num_classes
-            self.class_emb = nn.Embedding(num_classes + 1, 4 * dim)
-
-        def forward(self, x, time, y):
-            x = self.init_conv(x)
-            r = x.clone()
-
-            t = self.time_mlp(time) + self.class_emb(y)
-
-            h = []
-            for block1, block2, attn, downsample in self.downs:
-                x = block1(x, t)
-                h.append(x)
-                x = block2(x, t)
-                x = attn(x) + x
-                h.append(x)
-                x = downsample(x)
-
-            x = self.mid_block1(x, t)
-            x = self.mid_attn(x) + x
-            x = self.mid_block2(x, t)
-
-            for block1, block2, attn, upsample in self.ups:
-                x = torch.cat((x, h.pop()), dim=1)
-                x = block1(x, t)
-                x = torch.cat((x, h.pop()), dim=1)
-                x = block2(x, t)
-                x = attn(x) + x
-                x = upsample(x)
-
-            x = torch.cat((x, r), dim=1)
-            x = self.final_res_block(x, t)
-            return self.final_conv(x)
-
-    return (ConditionedUnet,)
 
 
 @app.cell
@@ -296,7 +251,6 @@ def _(torch):
 def _(make_grid, to_pil_image, torch):
     def show_trajectory(snapshots):
         """Grid of a trajectory: one row per sample, columns noisiest to cleanest.
-
         Column order is `sorted(snapshots, reverse=True)`.
         """
         order = sorted(snapshots, reverse=True)
@@ -323,7 +277,7 @@ def _(TRAIN, diffusion, epochs, lr, model, train, train_loader):
 @app.cell
 def _(diffusion, sample_trajectory, torch):
     y = torch.arange(10, device=diffusion.device)
-    x_steps = sample_trajectory(diffusion, y, [999, 500, 250, 100, 0])
+    x_steps = sample_trajectory(diffusion, y, [999, 750, 500, 250, 100, 0])
     return (x_steps,)
 
 
